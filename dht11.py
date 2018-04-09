@@ -1,58 +1,97 @@
-#!/usr/bin/python3
-# coding=utf-8
+#!usr/bin/env python3
+# coding = utf-8
 
-import RPi.GPIO as GPIO
+import RPi.GPIO as gpio
 import time
-channel = 4 // GPIO4
-data = []
-j = 0
-GPIO.setmode(GPIO.BCM)
+
+PORT = 4  # GPIO.7的BCM编码为4
+
+gpio.setwarnings(False)
+gpio.setmode(gpio.BCM)
 time.sleep(1)
-GPIO.setup(channel, GPIO.OUT)
-GPIO.output(channel, GPIO.LOW)
-time.sleep(0.02)
-GPIO.output(channel, GPIO.HIGH)
-GPIO.setup(channel, GPIO.IN)
-while GPIO.input(channel) == GPIO.LOW:
-    continue
-while GPIO.input(channel) == GPIO.HIGH:
-    continue
-while j < 40:
-    k = 0
-    while GPIO.input(channel) == GPIO.LOW:
-        continue
-    while GPIO.input(channel) == GPIO.HIGH:
-        k += 1
-        if k > 100:
-            break
-    if k < 8:
-        data.append(0)
+
+
+# 将二进制转化为10进制
+def binToInt(lst_data):
+    int_data = 0
+    if len(lst_data) is not 8:
+        print('data error')
     else:
-        data.append(1)
-    j += 1
-print("sensor is working.")
-print(data)
-humidity_bit = data[0:8]
-humidity_point_bit = data[8:16]
-temperature_bit = data[16:24]
-temperature_point_bit = data[24:32]
-check_bit = data[32:40]
-humidity = 0
-humidity_point = 0
-temperature = 0
-temperature_point = 0
-check = 0
-for i in range(8):
-    humidity += humidity_bit[i] * 2**(7 - i)
-    humidity_point += humidity_point_bit[i] * 2**(7 - i)
-    temperature += temperature_bit[i] * 2**(7 - i)
-    temperature_point += temperature_point_bit[i] * 2**(7 - i)
-    check += check_bit[i] * 2**(7 - i)
-tmp = humidity + humidity_point + temperature + temperature_point
-if check == tmp:
-    print("temperature :", temperature, "*C, humidity :", humidity, "%")
-else:
-    print("wrong")
-    print("temperature :", temperature, "*C, humidity :", humidity,
-            "% check :", check, ", tmp :", tmp)
-GPIO.cleanup()
+        for n in range(0, 8):
+            int_data = lst_data[n] * 2**(7 - n) + int_data
+    return int_data
+
+
+# start work
+def initGPIO():
+    gpio.setup(PORT, gpio.OUT)
+    gpio.output(PORT, gpio.LOW)
+    time.sleep(0.02)
+    gpio.output(PORT, gpio.HIGH)
+
+
+# wait to response
+def waitResponse():
+    gpio.setup(PORT, gpio.IN)
+    while gpio.input(PORT) == 1:
+        continue
+
+    while gpio.input(PORT) == 0:
+        continue
+
+    while gpio.input(PORT) == 1:
+        continue
+
+
+# get data
+def getData(data):
+    for i in range(0, 40):
+        k = 0
+        while gpio.input(PORT) == 0:
+            continue
+
+        while gpio.input(PORT) == 1:
+            k = k + 1
+            if k > 100:
+                break
+
+        if k < 8:
+            data.append(0)
+        else:
+            data.append(1)
+    return data
+
+
+# get temperature and humidity
+def dataHandler(data):
+    humidity_bit = data[0:8]
+    humidity_point_bit = data[8:16]
+    temperature_bit = data[16:24]
+    temperature_point_bit = data[24:32]
+    check_bit = data[32:40]
+
+    print(data)
+
+    humidity = binToInt(humidity_bit)
+    oohumidity = binToInt(humidity_point_bit)
+    temperature = binToInt(temperature_bit)
+    ootemperature = binToInt(temperature_point_bit)
+    check_date = binToInt(check_bit)
+
+    if check_date == humidity + temperature + oohumidity + ootemperature:
+        print("temperature: {}".format(temperature))
+        print("humidity:{}".format(humidity))
+    else:
+        print("get data error")
+
+
+def main():
+    data = []
+    initGPIO()
+    waitResponse()
+    re_data = getData(data)
+    dataHandler(re_data)
+
+
+if __name__ == '__main__':
+    main()
