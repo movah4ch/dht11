@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import sqlite3
+import getdhtData
 
 
 class saveTempHumd(object):
@@ -65,9 +66,11 @@ class saveTempHumd(object):
 
 
 def main():
+    dht = getdhtData.dhtTempHumd()
+    temp, humd = dht.getTempHumd()
     svt = saveTempHumd()
     svt.createTable()
-    svt.saveDate(20, 50)
+    svt.saveDate(temp, humd)
     svt.readData()
 
 
