@@ -22,12 +22,19 @@ class creatSocket(object):
         while True:
             clientsocket, addr = serversocket.accept()
             print("连接地址：{}".format(addr))
-            msg_tup = saveTempHumd.saveTempHumd.readData(self)
-            msg_str = [str(i) for i in msg_tup]
-            clientsocket.send(("".join(msg_str)).encode('UTF-8'))
+            msg = self.getTempHumdData()
+            clientsocket.send(msg.encode('UTF-8'))
             clientsocket.close()
             print('client socket closed')
             time.sleep(0.5)
+
+    # 取出数据库存入的最新的数据, 温度，湿度和存入的时间
+    def getTempHumdData(self):
+        msg_tup = saveTempHumd.saveTempHumd.readData(self)
+        # 将元组中的数据全部转化为string类型，并保存在list中
+        msg_lst = [str(i) for i in msg_tup]
+        msg_str = " ".join(msg_lst)
+        return msg_str
 
 
 def main():

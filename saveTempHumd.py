@@ -54,8 +54,9 @@ class saveTempHumd(object):
             conn = sqlite3.connect('TempHumd.db')
             cursor = conn.cursor()
             cursor.execute('select * from temphumd')
-            values = cursor.fetchall()
+            values = cursor.fetchone()
             print(values)
+            return(values)
         except Exception as e:
             print("read data error")
             print(e)
