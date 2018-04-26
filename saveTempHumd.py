@@ -53,7 +53,7 @@ class saveTempHumd(object):
         try:
             conn = sqlite3.connect('TempHumd.db')
             cursor = conn.cursor()
-            cursor.execute('select * from temphumd')
+            cursor.execute('select * from temphumd order by id desc')
             values = cursor.fetchone()
             print(values)
             return(values)

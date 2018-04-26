@@ -4,6 +4,7 @@
 import socket
 import time
 import saveTempHumd
+import getdhtData
 
 # HOST = "192.168.191.3"
 # PORT = 8001
@@ -18,10 +19,12 @@ class creatSocket(object):
         PORT = 8001
         serversocket.bind((HOST, PORT))
         serversocket.listen(5)
-
         while True:
             clientsocket, addr = serversocket.accept()
             print("连接地址：{}".format(addr))
+            # 获取最新的数据
+            self.saveDataToDB()
+            # 将温湿度发送给客户端
             msg = self.getTempHumdData()
             clientsocket.send(msg.encode('UTF-8'))
             clientsocket.close()
@@ -35,6 +38,13 @@ class creatSocket(object):
         msg_lst = [str(i) for i in msg_tup]
         msg_str = " ".join(msg_lst)
         return msg_str
+
+    # 客户端发送refresh时，将读取的温湿度保存在数据库中
+    def saveDataToDB(self):
+        dht = getdhtData.dhtTempHumd()
+        temp, humd = dht.getTempHumd()
+        svt = saveTempHumd.saveTempHumd()
+        svt.saveDate(temp, humd)
 
 
 def main():
